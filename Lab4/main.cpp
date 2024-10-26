@@ -292,17 +292,17 @@ int main(void)
 			glfwSetWindowShouldClose(window, true);
 		}
 
-		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+		// WIP (treb sa tina cont de pozitia curenta a camerei)
+		// WASD, de fapt A-D si SPACE
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		{
-			// rotire counter-clockwise
-			trans = glm::rotate(trans, 0.1f, glm::vec3(0.0, 0.0, 1.0));
+			trans = glm::translate(glm::mat4(1.0f), glm::vec3(-0.05f, 0.0, 0.0));
+		}
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.05f, 0.0, 0.0));
 		}
 
-		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-		{
-			// rotire clockwise
-			trans = glm::rotate(trans, -0.1f, glm::vec3(0.0, 0.0, 1.0));
-		}
 
 
 		// Check for events
