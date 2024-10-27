@@ -18,7 +18,7 @@
 
 
 GLFWwindow* window;
-const int width = 1024, height = 1024;
+const int width = 1600, height = 900;
 
 
 // ulterior o sa fie ceva mai generalizat, inclusiv sfere/cilindri, dar acuma...
@@ -27,21 +27,67 @@ class Rectangle
 {
 	// nume ID unic
 	std::string name;
-	// pozitia coltului de stanga sus (?)
+	// pozitia coltului de stanga jos
 	glm::vec3 position;		// de forma glm::vec3(0.5f, 0.5f, 0);
 	// marime width & height (so, X and Y)
 	glm::vec3 size;			// de forma glm::vec3(0.5f, 0.5f, 0);
 	// culoare RGB si vizibilitate alpha
 	glm::vec4 color;		// de forma glm::vec4(0.5f, 0.5f, 0.5f, 1.0);
 
+	GLfloat vertices[12];
+	GLuint indices[6];
+
+	GLuint vbo, vao, ibo;
+
+
+
 public:
 	
 	Rectangle(std::string auxname, glm::vec3 auxposition, glm::vec3 auxsize, glm::vec4 auxcolor)
 	{
+	// arguments:
 		name = auxname;
 		position = auxposition;
 		size = auxsize;
 		color = auxcolor;
+
+
+
+	// "compile" all vertices and indices of defined objects:
+		// retrieve the x and y coords of the top left corner
+		float tl_x = position.x;
+		float tl_y = position.y;
+
+		// compute the other 3 corners using the size and
+		// insert them into the vertices array in the following order: TR, BR, BL, TL
+		float width = size.x;
+		float height = size.y;
+
+		// top right
+		vertices[0] = tl_x + width;
+		vertices[1] = tl_y;
+		vertices[2] = 0;
+		// bottom right
+		vertices[3] = tl_x + width;
+		vertices[4] = tl_y + height;
+		vertices[5] = 0;
+		// bottom left
+		vertices[6] = tl_x;
+		vertices[7] = tl_y + height;
+		vertices[8] = 0;
+		// top left
+		vertices[9] = tl_x;
+		vertices[10] = tl_y;
+		vertices[11] = 0;
+
+		// for the indices array, insert the triangles with an offset of 4 per rectangle:
+		indices[0] = 0;
+		indices[1] = 3;
+		indices[2] = 1;
+		indices[3] = 1;
+		indices[4] = 3;
+		indices[5] = 2;
+
 	}
 
 	std::string getName()
@@ -63,7 +109,51 @@ public:
 	{
 		return color;
 	}
+
+	GLfloat* getVertices()
+	{
+		return vertices;
+	}
+
+	GLuint* getIndices()
+	{
+		return indices;
+	}
+
+	GLuint* getVBO()
+	{
+		return &vbo;
+	}
+	GLuint* getVAO()
+	{
+		return &vao;
+	}
+	GLuint* getIBO()
+	{
+		return &ibo;
+	}
 };
+
+
+
+// aici tinem toate obiectele (momentan numai Rectangle) pe care le randam
+std::vector<Rectangle> obiecte;
+
+// ca sa poti sa cauti in lista de obiecte dupa numele-id
+Rectangle* getRectangleByName(std::string name)
+{
+	for (int i = 0; i < obiecte.size(); i++)
+	{
+		if (obiecte.at(i).getName() == name)
+		{
+			return &(obiecte.at(i));
+		}
+	}
+}
+
+
+float camera_pos_x = 0;
+
 
 
 
@@ -93,6 +183,7 @@ void window_callback(GLFWwindow* window, int new_width, int new_height)
 	glViewport(0, 0, new_width, new_height);
 }
 */
+
 /*
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -114,13 +205,16 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 int main(void)
 {
 // setup la obiectele care ne intereseaza
-	// aici tinem toate obiectele (momentan numai Rectangle) pe care le randam
-	std::vector<Rectangle> obiecte;
 
-	obiecte.push_back(Rectangle("patrat1", glm::vec3(0.3f, 0.05f, 0), glm::vec3(4.0f, 2.0f, 0), glm::vec4(0.5f, 0.5f, 0.5f, 0.5)));
-	obiecte.push_back(Rectangle("patrat2", glm::vec3(0.2f, 0.1f, 0), glm::vec3(2.0f, 3.0f, 0), glm::vec4(0.5f, 0.5f, 0.5f, 0.5)));
+	// position - coltul stanga jos, deci: size - width creste catre dreapta, height creste in sus
+	obiecte.push_back(Rectangle("patrat1", glm::vec3(0.0f, -1.0f, 0), glm::vec3(0.5f, 0.4f, 0), glm::vec4(0.5f, 0.5f, 0.5f, 1.0)));
+	obiecte.push_back(Rectangle("patrat2", glm::vec3(0.7f, -1.0f, 0), glm::vec3(0.5f, 0.4f, 0), glm::vec4(0.5f, 0.5f, 0.5f, 0.5)));
+	obiecte.push_back(Rectangle("patrat3", glm::vec3(2.0f, -1.0f, 0), glm::vec3(0.5f, 0.4f, 0), glm::vec4(0.5f, 0.5f, 0.5f, 0.5)));
 
-	
+	// cand implementezi controalele pt player - treb schimbata pozitiile din array-ul
+	// de vertices (acolo sunt coordonatele), nu din rendering loop
+
+
 	
 // setup la opengl	
 	// Initialise GLFW
@@ -160,14 +254,38 @@ int main(void)
 
 
 
+	for (int g = 0; g < obiecte.size(); g++)
+	{
+		// setup vbo, vao, ibo
+		glGenVertexArrays(1, obiecte.at(g).getVAO());
+		glGenBuffers(1, obiecte.at(g).getVBO());
+		glGenBuffers(1, obiecte.at(g).getIBO());
 
-// introdus obiectele noastre in opengl
-	// for each rectangle we need 3 coords * 4 corners = 12 floats per rectangle
-	// we have obiecte.size() rectangles.
-	std::vector<GLfloat> vertices(12 * obiecte.size());
+		// bind VAO
+		glBindVertexArray(*(obiecte.at(g).getVAO()));
 
-	// for indices, it's 6 * obiecte.size()
-	std::vector<GLuint> indices(6 * obiecte.size());
+		//bind VBO
+		glBindBuffer(GL_ARRAY_BUFFER, *(obiecte.at(g).getVBO()));
+		glBufferData(GL_ARRAY_BUFFER, sizeof(obiecte.at(g).getVertices()[0]) * 12, obiecte.at(g).getVertices(), GL_STATIC_DRAW);
+
+		//bind IBO
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *(obiecte.at(g).getIBO()));
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(obiecte.at(g).getIndices()[0]) * 6, obiecte.at(g).getIndices(), GL_STATIC_DRAW);
+
+		// set attribute pointers
+		glVertexAttribPointer(
+			0,                  // attribute 0, must match the layout in the shader.
+			3,                  // size of each attribute
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			3 * sizeof(float),  // stride
+			(void*)0            // array buffer offset
+		);
+		glEnableVertexAttribArray(0);
+	}
+
+		
+
 
 /*
 	vertices = {
@@ -183,92 +301,9 @@ int main(void)
 	};
 */
 
-	// "compile" all vertices and indices of defined objects
-	for (int i = 0; i < obiecte.size(); i++)
-	{
-		// retrieve the x and y coords of the top left corner
-		float tl_x = obiecte.at(i).getPosition().x;
-		float tl_y = obiecte.at(i).getPosition().y;
 
-		// compute the other 3 corners using the size and
-		// insert them into the vertices array in the following order: TR, BR, BL, TL
-		float width = obiecte.at(i).getSize().x;
-		float height = obiecte.at(i).getSize().y;
-
-		// top right
-		vertices.at(12 * i + 0) = tl_x + width;
-		vertices.at(12 * i + 1) = tl_y;
-		vertices.at(12 * i + 2) = 0;
-		// bottom right
-		vertices.at(12 * i + 3) = tl_x + width;
-		vertices.at(12 * i + 4) = tl_y + height;
-		vertices.at(12 * i + 5) = 0;
-		// bottom left
-		vertices.at(12 * i + 6) = tl_x;
-		vertices.at(12 * i + 7) = tl_y + height;
-		vertices.at(12 * i + 8) = 0;
-		// top left
-		vertices.at(12 * i + 9) = tl_x;
-		vertices.at(12 * i + 10) = tl_y;
-		vertices.at(12 * i + 11) = 0;
-
-		// for the indices array, insert the triangles with an offset of 4 per rectangle:
-		indices.at(6 * i + 0) = 4 * i;
-		indices.at(6 * i + 1) = 4 * i + 3;
-		indices.at(6 * i + 2) = 4 * i + 1;
-		indices.at(6 * i + 3) = 4 * i + 1;
-		indices.at(6 * i + 4) = 4 * i + 3;
-		indices.at(6 * i + 5) = 4 * i + 2;
-	}
-
-
-// setup la obiectele noastre in opengl
-	// A Vertex Array Object (VAO) is an object which contains one or more Vertex Buffer Objects and is designed to store the information for a complete rendered object. 
-	GLuint vbo, vao, ibo;
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(1, &vbo);
-	glGenBuffers(1, &ibo);
-
-	// bind VAO
-	glBindVertexArray(vao);
-
-	// bind VBO
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
-
-	// bind IBO
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
-
-	// set attribute pointers
-	glVertexAttribPointer(
-		0,                  // attribute 0, must match the layout in the shader.
-		3,                  // size of each attribute
-		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		3 * sizeof(float),  // stride
-		(void*)0            // array buffer offset
-	);
-	glEnableVertexAttribArray(0);
-
-	// create matrices for transforms
-	glm::mat4 trans(1.0f);
 
 	/*
-	//maybe we can play with different positions
-	glm::vec3 positions[) = {
-		glm::vec3(0.0f,  0.0f,  0),
-		glm::vec3(0.2f,  0.5f, 0),
-		glm::vec3(-0.15f, -0.22f, 0),
-		glm::vec3(-0.38f, -0.2f, 0),
-		glm::vec3(0.24f, -0.4f, 0),
-		glm::vec3(-0.17f,  0.3f, 0),
-		glm::vec3(0.23f, -0.2f, 0),
-		glm::vec3(0.15f,  0.2f, 0),
-		glm::vec3(0.15f,  0.7f, 0),
-		glm::vec3(-0.13f,  0.1f, 0)
-	};
-
 	// Ex3 - Set a callback for handling mouse cursor position
 	// Decomment for a callback example
 	glfwSetCursorPosCallback(window, cursor_position_callback);
@@ -279,6 +314,10 @@ int main(void)
 	//glfwSetKeyCallback(window, key_callback);
 	*/
 
+
+
+	// create matrices for transforms
+	glm::mat4 trans(1.0f);
 
 // rendering loop
 	// Check if the window was closed
@@ -292,15 +331,16 @@ int main(void)
 			glfwSetWindowShouldClose(window, true);
 		}
 
-		// WIP (treb sa tina cont de pozitia curenta a camerei)
 		// WASD, de fapt A-D si SPACE
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		{
-			trans = glm::translate(glm::mat4(1.0f), glm::vec3(-0.05f, 0.0, 0.0));
+			camera_pos_x += 0.001f;
+			trans = glm::translate(glm::mat4(1.0f), glm::vec3(camera_pos_x, 0.0, 0.0));
 		}
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		{
-			trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.05f, 0.0, 0.0));
+			camera_pos_x += -0.001f;
+			trans = glm::translate(glm::mat4(1.0f), glm::vec3(camera_pos_x, 0.0, 0.0));
 		}
 
 
@@ -316,25 +356,30 @@ int main(void)
 
 
 
-		//bind VAO
-		glBindVertexArray(vao);
+		for (int j = 0; j < obiecte.size(); j++)
+		{
+			//bind VAO
+			glBindVertexArray(*(obiecte.at(j).getVAO()));
 
-		unsigned int transformLoc = glGetUniformLocation(programID, "transform");
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+			// shaderu de pozitie
+			unsigned int transformLoc = glGetUniformLocation(programID, "transform");
+			glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
-		unsigned int transformLoc2 = glGetUniformLocation(programID, "color");
-		glm::vec4 color = glm::vec4(0.5f, 0, 0.5f, 1.0);
-		glUniform4fv(transformLoc2, 1, glm::value_ptr(color));
+			// shaderu de culoare
+			unsigned int transformColor = glGetUniformLocation(programID, "color");
+			glUniform4fv(transformColor, 1, glm::value_ptr(obiecte.at(j).getColor()));
 
-		glDrawElements(GL_TRIANGLES, obiecte.size()*6, GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		}
 	
 	}
 
 	// Cleanup
-	glDeleteBuffers(1, &vbo);
-	glDeleteBuffers(1, &ibo);
-	glDeleteVertexArrays(1, &vao);
-	glDeleteProgram(programID);
+	// // asta treb si el sa fie un loop
+	//glDeleteBuffers(1, &vbo);
+	//glDeleteBuffers(1, &ibo);
+	//glDeleteVertexArrays(1, &vao);
+	//glDeleteProgram(programID);
 
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
