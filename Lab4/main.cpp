@@ -210,9 +210,8 @@ int main(void)
 	obiecte.push_back(Rectangle("patrat1", glm::vec3(0.0f, -1.0f, 0), glm::vec3(0.5f, 0.4f, 0), glm::vec4(0.5f, 0.5f, 0.5f, 1.0)));
 	obiecte.push_back(Rectangle("patrat2", glm::vec3(0.7f, -1.0f, 0), glm::vec3(0.5f, 0.4f, 0), glm::vec4(0.5f, 0.5f, 0.5f, 0.5)));
 	obiecte.push_back(Rectangle("patrat3", glm::vec3(2.0f, -1.0f, 0), glm::vec3(0.5f, 0.4f, 0), glm::vec4(0.5f, 0.5f, 0.5f, 0.5)));
+	obiecte.push_back(Rectangle("indianajones", glm::vec3(0.0f, -0.5f, 0), glm::vec3(0.1f, 0.5f, 0), glm::vec4(0.7f, 0.5f, 0.5f, 0.5)));
 
-	// cand implementezi controalele pt player - treb schimbata pozitiile din array-ul
-	// de vertices (acolo sunt coordonatele), nu din rendering loop
 
 
 	
@@ -316,8 +315,10 @@ int main(void)
 
 
 
-	// create matrices for transforms
+	// transformarea terrainului
 	glm::mat4 trans(1.0f);
+	// playerul care nu isi ia translatie
+	glm::mat4 locplayer(1.0f);
 
 // rendering loop
 	// Check if the window was closed
@@ -364,6 +365,14 @@ int main(void)
 			// shaderu de pozitie
 			unsigned int transformLoc = glGetUniformLocation(programID, "transform");
 			glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
+			if (obiecte.at(j).getName() == "indianajones")
+			{
+				// aplicam peste transformarea terenului o transformare care nu se misca
+				unsigned int transformLoc2 = glGetUniformLocation(programID, "transform");
+				glUniformMatrix4fv(transformLoc2, 1, GL_FALSE, glm::value_ptr(locplayer));
+			}
+				
 
 			// shaderu de culoare
 			unsigned int transformColor = glGetUniformLocation(programID, "color");
