@@ -1,14 +1,13 @@
 #version 330 core
+in vec2 fragTexCoord;
 
-uniform vec4 color;
+uniform sampler2D textureSampler;  // For texture
+uniform vec4 color;                // Color for each rectangle
 
-// Output data
-out vec4 fragCol;
-
+out vec4 fragColor;
 
 void main()
 {
-	// Output color from main
-	fragCol = color;
-
+    vec4 texColor = texture(textureSampler, fragTexCoord);
+    fragColor = texColor * color;  // Combine texture color with rectangle color
 }
