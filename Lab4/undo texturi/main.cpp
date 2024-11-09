@@ -69,42 +69,41 @@ public:
 
 
 
-		// BR
+		// Top Right (TR)
 		vertices[0] = tl_x + width;  // x
 		vertices[1] = tl_y;          // y
 		vertices[2] = 0.0f;          // z
-		vertices[3] = 1.0f;          // u (texture x-coordinate)
-		vertices[4] = 1.0f;          // v (texture y-coordinate)
+		//vertices[3] = 1.0f;          // u (texture x-coordinate)
+		//vertices[4] = 1.0f;          // v (texture y-coordinate)
 
-		// TR
-		vertices[5] = tl_x + width;  // x
-		vertices[6] = tl_y + height; // y
-		vertices[7] = 0.0f;          // z
-		vertices[8] = 1.0f;          // u
-		vertices[9] = 0.0f;          // v
+		// Bottom Right (BR)
+		vertices[3] = tl_x + width;  // x
+		vertices[4] = tl_y + height; // y
+		vertices[5] = 0.0f;          // z
+		//vertices[8] = 1.0f;          // u
+		//vertices[9] = 0.0f;          // v
 
-		// TL
-		vertices[10] = tl_x;         // x
-		vertices[11] = tl_y + height;// y
-		vertices[12] = 0.0f;         // z
-		vertices[13] = 0.0f;         // u
-		vertices[14] = 0.0f;         // v
+		// Bottom Left (BL)
+		vertices[6] = tl_x;         // x
+		vertices[7] = tl_y + height;// y
+		vertices[8] = 0.0f;         // z
+		//vertices[13] = 0.0f;         // u
+		//vertices[14] = 0.0f;         // v
 
-		// BL
-		vertices[15] = tl_x;         // x
-		vertices[16] = tl_y;         // y
-		vertices[17] = 0.0f;         // z
-		vertices[18] = 0.0f;         // u
-		vertices[19] = 1.0f;         // v
+		// Top Left (TL)
+		vertices[9] = tl_x;         // x
+		vertices[10] = tl_y;         // y
+		vertices[11] = 0.0f;         // z
+		//vertices[18] = 0.0f;         // u
+		//vertices[19] = 1.0f;         // v
 
 		// Define indices for two triangles that form the rectangle
-		indices[0] = 0; // BR // 0
-		indices[1] = 0; // BL // 3
-		indices[2] = 0; // TL // 2
-
-		indices[3] = 1; // TR
-		indices[4] = 0; // BR
-		indices[5] = 2; // TL
+		indices[0] = 0;
+		indices[1] = 3;
+		indices[2] = 1;
+		indices[3] = 1;
+		indices[4] = 3;
+		indices[5] = 2;
 
 	}
 
@@ -346,11 +345,11 @@ int main(void)
 			3,                  // size of each attribute
 			GL_FLOAT,           // type
 			GL_FALSE,           // normalized?
-			5 * sizeof(float),  // stride - size 3 for position + 2 coords for the texture
+			3 * sizeof(float),  // stride - size 3 for position + 2 coords for the texture
 			(void*)0            // has an offset of 0 in the vertex memory (this is the first thing in there)
 		);
 		glEnableVertexAttribArray(0);
-
+/*
 		// Texture coord attribute
 		glVertexAttribPointer(
 			1,
@@ -361,7 +360,7 @@ int main(void)
 			(void*)(3 * sizeof(float)) // has an offset of 3 in the vertex memory (this comes after the 3 floats for the position)
 		);
 		glEnableVertexAttribArray(1);
-
+*/
 	}
 
 
