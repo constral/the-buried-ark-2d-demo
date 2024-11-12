@@ -12,10 +12,6 @@
 #include "dependente\glm\gtc\matrix_transform.hpp"
 #include "dependente\glm\gtc\type_ptr.hpp"
 
-// STB (png-uri)
-#define STB_IMAGE_IMPLEMENTATION
-#include "dependente\stb\stb_image.h"
-
 
 #include "shader.hpp"
 
@@ -25,8 +21,7 @@ GLFWwindow* window;
 const int width = 1600, height = 900;
 
 
-// ulterior o sa fie ceva mai generalizat, inclusiv sfere/cilindri, dar acuma...
-// clasa "rectangle"
+
 class Rectangle
 {
 	// nume ID unic
@@ -49,6 +44,7 @@ public:
 	
 	Rectangle(std::string auxname, glm::vec2 auxposition, glm::vec2 auxsize, glm::vec4 auxcolor)
 	{
+
 	// arguments:
 		name = auxname;
 		position = auxposition;
@@ -73,34 +69,26 @@ public:
 		vertices[0] = tl_x + width;  // x
 		vertices[1] = tl_y;          // y
 		vertices[2] = 0.0f;          // z
-		vertices[3] = 1.0f;          // u (texture x-coordinate)
-		vertices[4] = 1.0f;          // v (texture y-coordinate)
 
 		// TR
-		vertices[5] = tl_x + width;  // x
-		vertices[6] = tl_y + height; // y
-		vertices[7] = 0.0f;          // z
-		vertices[8] = 1.0f;          // u
-		vertices[9] = 0.0f;          // v
+		vertices[3] = tl_x + width;  // x
+		vertices[4] = tl_y + height; // y
+		vertices[5] = 0.0f;          // z
 
 		// TL
-		vertices[10] = tl_x;         // x
-		vertices[11] = tl_y + height;// y
-		vertices[12] = 0.0f;         // z
-		vertices[13] = 0.0f;         // u
-		vertices[14] = 0.0f;         // v
+		vertices[6] = tl_x;         // x
+		vertices[7] = tl_y + height;// y
+		vertices[8] = 0.0f;         // z
 
 		// BL
-		vertices[15] = tl_x;         // x
-		vertices[16] = tl_y;         // y
-		vertices[17] = 0.0f;         // z
-		vertices[18] = 0.0f;         // u
-		vertices[19] = 1.0f;         // v
+		vertices[9] = tl_x;         // x
+		vertices[10] = tl_y;         // y
+		vertices[11] = 0.0f;         // z
 
 		// Define indices for two triangles that form the rectangle
 		indices[0] = 0; // BR // 0
-		indices[1] = 0; // BL // 3
-		indices[2] = 0; // TL // 2
+		indices[1] = 3; // BL // 3
+		indices[2] = 2; // TL // 2
 
 		indices[3] = 1; // TR
 		indices[4] = 0; // BR
@@ -150,6 +138,7 @@ public:
 	{
 		return &ibo;
 	}
+
 };
 
 
@@ -171,53 +160,13 @@ Rectangle* getRectangleByName(std::string name)
 
 float camera_pos_x = 0;
 float camera_pos_y = 0;
-int jumpstep = 0;
+bool jumping = 0;
 
-
-
-// load texture from file
-GLuint LoadTexture(const char* filepath) {
-
-	GLuint textureID;
-	glGenTextures(1, &textureID);
-
-	int width, height, nrChannels;
-
-	// compatibility - flip images loaded from file vertically ???
-	//stbi_set_flip_vertically_on_load(false);
-
-	// Load the image data
-	unsigned char* data = stbi_load(filepath, &width, &height, &nrChannels, 0);
-	if (data) {
-		GLenum format;
-		if (nrChannels == 1)
-			format = GL_RED;
-		else if (nrChannels == 3)
-			format = GL_RGB;
-		else if (nrChannels == 4)
-			format = GL_RGBA;
-
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		// Set texture filtering parameters
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		stbi_image_free(data); // Free image memory after loading
-	}
-	else {
-		std::cout << "Failed to load texture" << std::endl;
-		stbi_image_free(data);
-	}
-
-	return textureID;
-}
-
-
+//jump stuff
+float deltaJumpTime = 0.0f;
+float firstJumpFrame = 0.0f;
+float jumpDuration = 1.0f; // seconds
+float jumpHeight = 0.2f;
 
 
 
@@ -316,11 +265,9 @@ int main(void)
 	// Create and compile our GLSL program from the shaders
 	GLuint programID = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
 
-	// Load texture
-	GLuint texture = LoadTexture("texturi/indy.png");
 
 
-
+	// set up vbo, vao, ibo and such for every object
 	for (int g = 0; g < obiecte.size(); g++)
 	{
 		// setup vbo, vao, ibo
@@ -346,21 +293,10 @@ int main(void)
 			3,                  // size of each attribute
 			GL_FLOAT,           // type
 			GL_FALSE,           // normalized?
-			5 * sizeof(float),  // stride - size 3 for position + 2 coords for the texture
+			3 * sizeof(float),  // stride - size 3 for position + 2 coords for the texture
 			(void*)0            // has an offset of 0 in the vertex memory (this is the first thing in there)
 		);
 		glEnableVertexAttribArray(0);
-
-		// Texture coord attribute
-		glVertexAttribPointer(
-			1,
-			2,
-			GL_FLOAT,
-			GL_FALSE,
-			5 * sizeof(float),
-			(void*)(3 * sizeof(float)) // has an offset of 3 in the vertex memory (this comes after the 3 floats for the position)
-		);
-		glEnableVertexAttribArray(1);
 
 	}
 
@@ -397,43 +333,51 @@ int main(void)
 			glfwSetWindowShouldClose(window, true);
 		}
 
+// controale
+
 		// WASD, de fapt A-D si SPACE
 		//// ne-ar trebui ceva fizica la treaba asta, si sa se miste actual pozitia caracterului
 		//// (de care tii cont ca sa determini unde e si, spre ex, sa il randezi cazand)
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		{
 			camera_pos_x += 0.001f;
-			trans = glm::translate(glm::mat4(1.0f), glm::vec3(camera_pos_x, 0.0, 0.0));
 		}
+
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		{
 			camera_pos_x += -0.001f;
-			trans = glm::translate(glm::mat4(1.0f), glm::vec3(camera_pos_x, 0.0, 0.0));
 		}
 		
+
+
 		// space to jump
-		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && jumpstep == 0)
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && jumping == 0)
 		{
-			jumpstep = 1;
+			jumping = 1;
+			firstJumpFrame = glfwGetTime();
 		}
 
-		// if jumping => have a step counter that increments for a while until the animation stops
-		if (jumpstep > 0) {
-			
-			if (jumpstep < 60)
-			{
-				GLfloat trigjumpstep = (jumpstep - 30) / 10.0f;
-				std::cout << trigjumpstep << std::endl;
-				camera_pos_y =  1.0f * glm::cos(trigjumpstep);
-				jumpstep++;
-			}
-			else
-			{
-				jumpstep = 0;
-			}
+		// if jumping => animation
+		if (jumping == 1) {
 
-			trans = glm::translate(glm::mat4(1.0f), glm::vec3(camera_pos_x, camera_pos_y, 0.0));
+			float currentJumpFrame = glfwGetTime();
+			deltaJumpTime = currentJumpFrame - firstJumpFrame;
+			float normalizedTime = (deltaJumpTime / jumpDuration*2) * 3.1456f;
+
+			const float radius = jumpHeight;
+			float cosinus = cos(normalizedTime);		// values (-1, 1)
+			camera_pos_y = (-1.0f + cosinus) * radius;	// values (0, jumpHeight)
+
+			// stop jumping animation when duration expires
+			if (deltaJumpTime > jumpDuration)
+				jumping = 0;
+
 		}
+
+		// tine cont si de translatii laterale si verticale
+		trans = glm::translate(glm::mat4(1.0f), glm::vec3(camera_pos_x, camera_pos_y, 0.0));
+
+
 
 		// la treaba cu dashul peste prapastie -- acelasi lucru ca la jump, dar se misca pe orizontala + ceva trigonometrie pt. inaltime?
 
@@ -450,16 +394,11 @@ int main(void)
 
 
 
+		// randat obiectele
 		for (int j = 0; j < obiecte.size(); j++)
 		{
 			// bind VAO
 			glBindVertexArray(*(obiecte.at(j).getVAO()));
-
-			// Bind the texture
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, texture);
-			glUniform1i(glGetUniformLocation(programID, "textureSampler"), 0);
-
 
 
 			// shaderu de pozitie
@@ -489,7 +428,6 @@ int main(void)
 	//glDeleteBuffers(1, &ibo);
 	//glDeleteVertexArrays(1, &vao);
 	//glDeleteProgram(programID);
-	//glDeleteTextures(1, &texture);
 
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
