@@ -20,9 +20,14 @@
 GLFWwindow* window;
 const int width = 1600, height = 900;
 
+<<<<<<< HEAD
 // plm github
 class Rectangle
 {
+=======
+
+class Rectangle{
+>>>>>>> 3213aba15e841dc447746a24aa9c5162ea9c8e6f
 	// nume ID unic
 	std::string name;
 	// pozitia coltului de stanga jos
@@ -95,6 +100,7 @@ public:
 
 	}
 
+//getters
 	std::string getName()
 	{
 		return name;
