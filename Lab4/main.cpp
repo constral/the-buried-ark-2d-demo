@@ -177,18 +177,63 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
 	std::cout << "The mouse cursor is: " << xpos << " " << ypos << std::endl;
 }
+*/
+
 
 //Ex 3: Add callback for mouse button
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-	if (button == GLFW_MOUSE_BUTTON_MIDDLE)
-	{
-		std::cout << "MIDDLE" << std::endl;
+bool whipActive = false; //sa vdem daca biciul e activ sau nu
 
-		//pozitie = (pozitie + 1)%10;
-	}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        whipActive = true; // Activează biciul
+    } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+        whipActive = false; // Dezactivează biciul
+    }
 }
 
+//verifica daca biciul loveste bara
+bool isWhipHittingBar(glm::vec2 playerPos, glm::vec2 barPos, float range) {
+    float distance = glm::length(playerPos - barPos);
+    return distance < range; //distanta e mai mica decat raza de actiune a biciului
+}
+
+//starea playerului
+enum PlayerState {
+    Idle, //cand nu face nimic
+    Whipping, //cand da cu biciu
+    Swinging //cand e prins de bara
+};
+
+PlayerState currentState = Idle; //ii da automat idle la inceput
+
+void updatePlayerState(bool whipActive, bool isHittingBar) {
+    if (currentState == Idle && whipActive) { //daca e in idle si porneste biciu trece in starea de bici
+        currentState = Whipping;
+    }
+    if (currentState == Whipping && isHittingBar) {
+        currentState = Swinging;	//daca da cu biciul si loveste bara trece in starea de prins de bara
+    }
+    if (currentState == Swinging && !whipActive) {
+        currentState = Idle; //daca e prins de bara si nu mai da cu biciul trece in idle
+    }
+}
+
+/*
+glm::vec2 playerVelocity(0.0f, -9.8f); //gravitatia default
+
+void updatePhysics(float deltaTime) {
+    if (currentState == Swinging) {
+        //daca e prins de bara scoate gravitatia
+        playerVelocity = glm::vec2(0.0f, 0.0f);
+    } else {
+		//gravitatia default
+        playerVelocity.y += -9.8f * deltaTime;
+    }
+}
+*/
+
+/*
 //Ex 4: Complete callback for adjusting the viewport when resizing the window
 void window_callback(GLFWwindow* window, int new_width, int new_height)
 {	
@@ -218,6 +263,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 int main(void)
 {
 // setup la obiectele care ne intereseaza
+
+	//barile
+				std::vector<glm::vec2> bars = {
+				glm::vec2(100.0f, 200.0f), //pozitia barilor
+				glm::vec2(300.0f, 150.0f)
 
 	// position - coltul stanga jos, deci: size - width creste catre dreapta, height creste in sus
 	obiecte.push_back(Rectangle("patrat1", glm::vec2(0.0f, -1.0f), glm::vec2(0.5f, 0.4f), glm::vec4(0.5f, 0.5f, 0.5f, 1.0)));
@@ -417,6 +467,42 @@ int main(void)
 			glUniform4fv(transformColor, 1, glm::value_ptr(obiecte.at(j).getColor()));
 
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+			void renderPlayer() { //randeaza playerul in functie de starea lui
+			switch (currentState) {
+				case Idle:
+					drawPlayerIdle();
+					break;
+				case Whipping:
+					drawPlayerWhipping();
+					break;
+				case Swinging:
+					drawPlayerSwinging();
+					break;
+				}
+			};
+
+			for (auto& bar : bars) {
+				if (whipActive && isWhipHittingBar(playerPos, bar, whipRange)) {
+					currentState = Swinging;
+					//aici danseaza indiana la bara
+					playerPos = bar;
+				}
+			}
+
+			void gameLoop(float deltaTime) {
+				//update starea playerului
+				updatePlayerState(whipActive, isWhipHittingBar(playerPos, currentBarPos));
+				updatePhysics(deltaTime);
+
+				// randeaza
+				renderScene();
+			}
+
+
+}
+
 		}
 	
 	}
