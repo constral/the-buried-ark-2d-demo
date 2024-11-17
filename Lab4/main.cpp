@@ -21,7 +21,6 @@ GLFWwindow* window;
 const int width = 1600, height = 900;
 
 
-
 class Rectangle
 {
 	// nume ID unic
@@ -33,13 +32,13 @@ class Rectangle
 	// culoare RGB si vizibilitate alpha
 	glm::vec4 color;		// de forma glm::vec4(0.5f, 0.5f, 0.5f, 1.0);
 
-	GLfloat vertices[20];
+	GLfloat vertices[12];
 	GLuint indices[6];
 
 	GLuint vbo, vao, ibo;
 
 
-
+//constructorul
 public:
 	
 	Rectangle(std::string auxname, glm::vec2 auxposition, glm::vec2 auxsize, glm::vec4 auxcolor)
