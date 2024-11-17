@@ -21,8 +21,7 @@ GLFWwindow* window;
 const int width = 1600, height = 900;
 
 
-class Rectangle
-{
+class Rectangle{
 	// nume ID unic
 	std::string name;
 	// pozitia coltului de stanga jos
@@ -95,6 +94,7 @@ public:
 
 	}
 
+//getters
 	std::string getName()
 	{
 		return name;
