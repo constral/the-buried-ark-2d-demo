@@ -20,7 +20,7 @@
 GLFWwindow* window;
 const int width = 1600, height = 900;
 
-
+// plm github
 class Rectangle
 {
 	// nume ID unic
