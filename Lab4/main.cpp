@@ -245,20 +245,6 @@ public:
 	{
 		return polygons_scale;
 	}
-
-
-
-	// Display triangle details for debug
-	void displayTriangles() const {
-		for (size_t i = 0; i < triunghiuri.size(); ++i) {
-			const auto& tri = triunghiuri[i];
-			std::cout << "Triangle " << i + 1 << ":\n";
-			std::cout << "  v1: (" << tri.v1.x << ", " << tri.v1.y << ")\n";
-			std::cout << "  v2: (" << tri.v2.x << ", " << tri.v2.y << ")\n";
-			std::cout << "  v3: (" << tri.v3.x << ", " << tri.v3.y << ")\n";
-			std::cout << "  color: (" << tri.color.r << ", " << tri.color.g << ", " << tri.color.b << ", " << tri.color.a << ")\n";
-		}
-	}
 };
 
 
@@ -319,7 +305,7 @@ bool isWhipHittingBar()
 
 	// tinem cont numai de pozitia pe x, ca si asa a fost o mojicie aia cu sistemu de referinta la indiana jones
 	float distance = (camera_pos_x + barna_ptr->getPosition().x);
-	std::cout << distance << std::endl;
+	
     return distance < razaBiciului; //distanta e mai mica decat raza de actiune a biciului
 }
 
@@ -365,6 +351,12 @@ bool checkCollision() {
 
 int main(void)
 {
+// controls
+	std::cout << "move left / right - A, D" << std::endl;
+	std::cout << "jump - space" << std::endl;
+	std::cout << "use whip - left click" << std::endl;
+	std::cout << "the whip can be used around a pole in order to help you jump farther." << std::endl;
+
 // setup la obiectele care ne intereseaza
 
 	// poligoanele
@@ -686,12 +678,10 @@ int main(void)
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 		{
 			whipping = 1;
-			std::cout << "whip 1" << std::endl;
 		}
 		else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
 		{
 			whipping = 0;
-			std::cout << "whip 0" << std::endl;
 		}
 
 		// if whipping and close enough, start swinging animation
