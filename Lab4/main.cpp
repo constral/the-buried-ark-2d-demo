@@ -227,8 +227,6 @@ public:
 		polygons_offset(auxpolygons_offset),
 		polygons_scale(auxpolygons_scale)
 	{
-		//auxpolygons_offset = glm::vec2(0.0f, 0.0f);
-		//auxpolygons_scale = glm::vec2(1.0f, 1.0f);
 	}
 
 
@@ -281,8 +279,8 @@ bool hitboxes_visible = 1;
 //jump stuff
 float deltaJumpTime = 0.0f;
 float firstJumpFrame = 0.0f;
-float shortjumpDuration = 0.7f;		// seconds
-float longjumpDuration = 2.3f;		// seconds
+float shortjumpDuration = 1.0f;		// seconds
+float longjumpDuration = 2.7f;		// seconds
 float jumpDuration = shortjumpDuration;
 float jumpHeight = 0.2f;
 
@@ -291,7 +289,7 @@ float swingDuration = 1.0f; // seconds
 
 
 
-const float gravity = 0.001f;
+const float gravity = 0.002f;
 
 
 
@@ -340,9 +338,8 @@ bool checkCollision() {
 		-1.0f * (playerPos.x - playerSize.x) > getRectangleByName("patrat3")->getPosition().x &&
 		-1.0f * (playerPos.x) < getRectangleByName("patrat3")->getPosition().x + getRectangleByName("patrat3")->getSize().x
 	)
-	{
 		return true;
-	}
+
 	return false;
 }
 
