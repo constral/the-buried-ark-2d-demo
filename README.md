@@ -1,3 +1,6 @@
+# The Buried Ark (2D demo)
+<img src="poster.png" width="600"/>
+
 ## Overview
 This project is a demo game, showcasing mechanics that will be implemented in a larger 3D OpenGL game with the same theme. The demo is a single-level platformer that follows the player's character - an incarnation of Indiana Jones - who attempts to cross pits filled with spikes. The character is able to perform short jumps, and can grapple with his whip when needing to jump over larger gaps.
 <br>The game implements simple controls, player states that manage game mechanics (e.g. swinging across gaps or death by falling into spikes), as well as using .svg graphics for the shapes of the objects (converted from XML data into OpenGL-compatible polygons).
